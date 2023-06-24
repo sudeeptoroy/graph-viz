@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Service Graph</title>
+  <style type="text/css">
+    #graph {
+      height: 600px;
+    }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.js"></script>
+  <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.css">
+</head>
+<body>
+  <div id="graph"></div>
+  <button onclick="addNode()">Add Node</button>
+  <button onclick="removeNode()">Remove Node</button>
+  <button onclick="removeEdge()">Remove Edge</button>
+  <button onclick="renameNode()">Rename Node</button>
+  <button onclick="addEdge()">Add Edge</button>
+  <button onclick="saveGraph()">Save Graph</button>
+  <button onclick="loadGraph()">Load Graph</button>
+  <script type="text/javascript">
+    var nodes = new vis.DataSet();
+    var edges = new vis.DataSet();
+
+    var container = document.getElementById("graph");
+    var data = {
+      nodes: nodes,
+      edges: edges
+    };
+    var options = {};
+    var network = new vis.Network(container, data, options);
+    var selectedNodeIds = [];
+
+    network.on("click", function (params) {
+      var nodeId = params.nodes[0];
+      if (nodeId && nodes.get(nodeId)) {
+        if (selectedNodeIds.length < 2) {
+          if (!selectedNodeIds.includes(nodeId)) {
+            selectedNodeIds.push(nodeId);
+            nodes.update({ id: nodeId, color: { background: "yellow" } });
+          }
+        } else {
+          var unselectNodeId = selectedNodeIds.shift();
+          nodes.update({ id: unselectNodeId, color: { background: "white" } });
+          selectedNodeIds.push(nodeId);
+          nodes.update({ id: nodeId, color: { background: "yellow" } });
+        }
+      }
+    });
+
+    function addNode() {
+      var nextNodeId = nodes.length + 1;
+      var newNode = { id: nextNodeId, label: "Node " + nextNodeId };
+      nodes.add(newNode);
+
+      network.selectNodes([]);
+      selectedNodeIds = [];
+    }
+
+    function removeNode() {
+      if (selectedNodeIds.length === 1) {
+        var selectedNodeId = selectedNodeIds[0];
+        nodes.remove({ id: selectedNodeId });
+        edges.forEach(function (edge) {
+          if (edge.from === selectedNodeId || edge.to === selectedNodeId) {
+            edges.remove({ id: edge.id });
+          }
+        });
+
+        network.selectNodes([]);
+        selectedNodeIds = [];
+      }
+    }
+
+    function removeEdge() {
+      if (selectedNodeIds.length === 2) {
+        var fromNodeId = selectedNodeIds[0];
+        var toNodeId = selectedNodeIds[1];
+        edges.forEach(function (edge) {
+          if ((edge.from === fromNodeId && edge.to === toNodeId) || (edge.from === toNodeId && edge.to === fromNodeId)) {
+            edges.remove({ id: edge.id });
+          }
+        });
+
+        network.selectNodes([]);
+        selectedNodeIds = [];
+      }
+    }
+
+    function renameNode() {
+      if (selectedNodeIds.length === 1) {
+        var selectedNodeId = selectedNodeIds[0];
+        var newName = prompt("Enter a new name for the node:");
+        if (newName) {
+          var node = nodes.get(selectedNodeId);
+          node.label = newName;
+          nodes.update(node);
+        }
+      }
+    }
+
+    function addEdge() {
+      if (selectedNodeIds.length === 2) {
+        var fromNodeId = selectedNodeIds[0];
+        var toNodeId = selectedNodeIds[1];
+        var newEdge = { from: fromNodeId, to: toNodeId };
+        edges.add(newEdge);
+
+        network.selectNodes([]);
+        selectedNodeIds = [];
+      }
+    }
+
+    function saveGraph() {
+      var graphData = {
+        nodes: nodes.get(),
+        edges: edges.get()
+      };
+
+      var fileName = "graph.json";
+      var fileData = JSON.stringify(graphData);
+      var blob = new Blob([fileData], { type: "application/json" });
+      var url = URL.createObjectURL(blob);
+
+      var link = document.createElement("a");
+      link.href = url;
+      link.download = fileName;
+      link.click();
+    }
+
+    function loadGraph() {
+      var input = document.createElement("input");
+      input.type = "file";
+      input.accept = ".json";
+      input.onchange = function (event) {
+        var file = event.target.files[0];
+        var reader = new FileReader();
+        reader.onload = function (event) {
+          var fileData = event.target.result;
+          var graphData = JSON.parse(fileData);
+
+          nodes.clear();
+          edges.clear();
+
+          nodes.add(graphData.nodes);
+          edges.add(graphData.edges);
+
+          console.log("Graph loaded.");
+        };
+        reader.readAsText(file);
+      };
+
+      input.click();
+    }
+  </script>
+</body>
+</html>
