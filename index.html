@@ -35,7 +35,7 @@
     network.on("click", function (params) {
       var nodeId = params.nodes[0];
       if (nodeId && nodes.get(nodeId)) {
-            if (selectedNodeIds.length < 2) {
+        if (selectedNodeIds.length < 2) {
           if (!selectedNodeIds.includes(nodeId)) {
             selectedNodeIds.push(nodeId);
             nodes.update({ id: nodeId, color: { background: "yellow" } });
