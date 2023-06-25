@@ -35,7 +35,7 @@
     network.on("click", function (params) {
       var nodeId = params.nodes[0];
       if (nodeId && nodes.get(nodeId)) {
-        if (selectedNodeIds.length < 2) {
+            if (selectedNodeIds.length < 2) {
           if (!selectedNodeIds.includes(nodeId)) {
             selectedNodeIds.push(nodeId);
             nodes.update({ id: nodeId, color: { background: "yellow" } });
@@ -43,14 +43,14 @@
         } else {
           var unselectNodeId = selectedNodeIds.shift();
           nodes.update({ id: unselectNodeId, color: { background: "white" } });
-          selectedNodeIds.push(nodeId);
           nodes.update({ id: nodeId, color: { background: "yellow" } });
         }
       }
     });
 
     function addNode() {
-      var nextNodeId = nodes.length + 1;
+      var randVal = Math.floor(1000 + Math.random() * 9000);
+      var nextNodeId = nodes.length + 1 + "-" + randVal;
       var newNode = { id: nextNodeId, label: "Node " + nextNodeId };
       nodes.add(newNode);
 
